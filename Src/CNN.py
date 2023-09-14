@@ -63,7 +63,22 @@ class ConvolutionLayer:
 
         return 0
     
+class DetectorLayer:
+    ## TODO : implement detector layer with relu
+    # def __init__(self):
+    #     ## TODO : implement detector layer with relu
 
+    def feedForward(self, input_):
+        height, width, channel = input_.shape
+        for c in range (channel):
+            for i in range(height):
+                for j in range(width):
+                    output[c,i,j] = self.reLu(output[c,i,j])
+
+        return 0
+    
+    def reLu(x):
+        return max(0,x)
 class PoolingLayer:
     kernel_size = [-1,-1]
     stride = 0 
@@ -77,9 +92,8 @@ class PoolingLayer:
     
 
 class FlattenLayer:
-    def __init__(self):
-        # TODO : ini perlu ngga ya?
-        print("initializing flatten layer")
+    # def __init__(self):
+    #     # TODO : ini perlu ngga ya?
 
     def feedForward(self, input_):
         # TODO : implement flatten
