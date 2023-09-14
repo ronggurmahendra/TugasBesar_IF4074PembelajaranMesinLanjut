@@ -98,3 +98,14 @@ class FlattenLayer:
     def feedForward(self, input_):
         # TODO : implement flatten
         return 0
+
+
+class DenseLayer:
+    ## TODO : implement dense layer
+
+    # def __init__(self):
+    #     # TODO : implement initalization dense layer
+
+    def feedForward(self, input_):
+        # TODO : FF buat dense(ada yang nyimpen tubes sebelumnya ngga? wkwk)
+        return 0
