@@ -77,7 +77,7 @@ class PoolingLayer:
     
 
 class FlattenLayer:
-    def __init__(self, kernel_size_, padding_, mode_):
+    def __init__(self):
         # TODO : ini perlu ngga ya?
         print("initializing flatten layer")
 
