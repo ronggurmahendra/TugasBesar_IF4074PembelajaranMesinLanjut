@@ -11,7 +11,10 @@ class CNN:
         self.layers.append(layer_)
 
     def predict(self, input_):
-        ## TODO : di test
+        # add a dimension to a single channel input
+        if len(input_.shape) == 2:
+            input_ = np.expand_dims(input_, axis=0)
+
         output = []  
         for layer in self.layers:
             output = layer.feedForward(input_)
@@ -64,18 +67,14 @@ class ConvolutionLayer:
         return 0
     
 class DetectorLayer:
-    ## TODO : implement detector layer with relu
-    # def __init__(self):
-    #     ## TODO : implement detector layer with relu
-
     def feedForward(self, input_):
-        height, width, channel = input_.shape
+        channel, height, width = input_.shape
+        output = np.zeros((channel, height, width)) # output feature map
         for c in range (channel):
             for i in range(height):
                 for j in range(width):
                     output[c,i,j] = self.reLu(output[c,i,j])
-
-        return 0
+        return output
     
     def reLu(x):
         return max(0,x)
@@ -84,20 +83,40 @@ class PoolingLayer:
     stride = 0 
     mode = "" # either max / average
 
-    def __init__(self, kernel_size_, padding_, mode_):
-        ## TODO : cek validitas input >1/ dimensi terhadap input matrix(perlu di infer dari layer sebelumnya)
-        self.kernel_size = kernel_size_
+    def __init__(self, filter_size_, stride_, mode_):
+        self.filter_size = filter_size_
         self.stride = stride_
         self.mode = mode_
+
+    def feedForward(self, input_):
+        channel, input_height, input_width = input_.shape
+        output_height = input_height // self.filter_size[0]
+        output_width = input_width // self.filter_size[1]
+        
+        if output_height <= 0 or output_width <= 0:
+            raise ValueError("Invalid input or filter size")
+
+        output = np.zeros((channel, output_height, output_width))
+        for ch in range(channel):
+            for i in range(output_height):
+                for j in range(output_width):
+                    output[ch,i,j] = self.pooling(input_[
+                        ch,
+                        i*self.filter_size[0]:(i+1)*self.filter_size[0],
+                        j*self.filter_size[1]:(j+1)*self.filter_size[1]
+                        ])
+        return output
+    
+    def pooling(self, input_):
+        if self.mode == "max":
+            return np.max(input_)
+        elif self.mode == "average":
+            return np.average(input_)
     
 
 class FlattenLayer:
-    # def __init__(self):
-    #     # TODO : ini perlu ngga ya?
-
     def feedForward(self, input_):
-        # TODO : implement flatten
-        return 0
+        return np.reshape(input_, (-1))
 
 
 class DenseLayer:
