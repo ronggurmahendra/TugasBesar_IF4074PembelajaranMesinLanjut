@@ -120,11 +120,10 @@ class FlattenLayer:
 
 
 class DenseLayer:
-    ## TODO : implement dense layer
-
-    # def __init__(self):
-    #     # TODO : implement initalization dense layer
+    def __init__(self, units_, input_size_):
+        self.units = units_
+        self.weights = np.random.rand(input_size_ + 1, units_)
 
     def feedForward(self, input_):
-        # TODO : FF buat dense(ada yang nyimpen tubes sebelumnya ngga? wkwk)
-        return 0
+        input_ = np.append(input_, 1)
+        return np.dot(input_, self.weights)
