@@ -83,15 +83,18 @@ class PoolingLayer:
     stride = 0 
     mode = "" # either max / average
 
-    def __init__(self, filter_size_, stride_, mode_):
+    def __init__(self, filter_size_, mode_, stride_=None):
         self.filter_size = filter_size_
-        self.stride = stride_
+        # definition of stride is define as
+        # https://machinelearningmastery.com/pooling-layers-for-convolutional-neural-networks/
+        if stride_ is None:
+            self.stride = filter_size_
         self.mode = mode_
 
     def feedForward(self, input_):
         channel, input_height, input_width = input_.shape
-        output_height = input_height // self.filter_size[0]
-        output_width = input_width // self.filter_size[1]
+        output_height = input_height // self.stride[0]
+        output_width = input_width // self.stride[1]
         
         if output_height <= 0 or output_width <= 0:
             raise ValueError("Invalid input or filter size")
@@ -102,8 +105,8 @@ class PoolingLayer:
                 for j in range(output_width):
                     output[ch,i,j] = self.pooling(input_[
                         ch,
-                        i*self.filter_size[0]:(i+1)*self.filter_size[0],
-                        j*self.filter_size[1]:(j+1)*self.filter_size[1]
+                        i*self.stride[0]:(i+1)*self.filter_size[0],
+                        j*self.stride[1]:(j+1)*self.filter_size[1]
                         ])
         return output
     
