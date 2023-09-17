@@ -50,10 +50,13 @@ class ConvolutionLayer:
 
     def feedForward(self, input_):
         ## TODO :  masi syntax error, baru implement secara algoritmik aja
+        # print(input_.shape)
         height, width, channel = input_.shape
 
-        conv_height = height - self.filter_size[0] + 1
-        conv_width = width - self.filter_size[1] + 1
+        # conv_height = height - self.filter_size[0] + 1
+        # conv_width = width - self.filter_size[1] + 1
+        conv_height = height - self.filters[0] + 1
+        conv_width = width - self.filters[1] + 1
 
         output = np.zeros((self.filters, conv_height, conv_width)) # output feature map
         
