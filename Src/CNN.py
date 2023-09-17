@@ -62,7 +62,10 @@ class ConvolutionLayer:
         self.padding = padding_
         self.stride = stride_
         self.input_shape = input_shape_
-        self.filter = np.ones((self.filter_num,self.filter_size[0], self.filter_size[1]))
+        # self.filter = np.ones((self.filter_num,self.filter_size[0], self.filter_size[1]))
+        # self.filter = np.random.randint(1,10,size = (self.filter_num,self.filter_size[0], self.filter_size[1]))
+        self.filter = np.random.random((self.filter_num,self.filter_size[0], self.filter_size[1]))
+        
 
     def feedForward(self, input_):
         ## TODO :  masi syntax error, baru implement secara algoritmik aja
@@ -79,8 +82,9 @@ class ConvolutionLayer:
 
         
         print("input_padded : ", input_padded)
-        
         channel, height, width = input_padded.shape
+
+        print("filter : ", self.filter)
         print("filter_size : ", self.filter_size)
         print("input_padded.shape", input_padded.shape)
         conv_height = (height - self.filter_size[0] + 1) // self.stride[0]
