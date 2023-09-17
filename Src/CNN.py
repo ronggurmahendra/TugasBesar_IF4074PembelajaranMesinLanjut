@@ -75,7 +75,7 @@ class DetectorLayer:
         for c in range (channel):
             for i in range(height):
                 for j in range(width):
-                    output[c,i,j] = self.reLu(output[c,i,j])
+                    output[c,i,j] = DetectorLayer.reLu(output[c,i,j])
         return output
     
     def reLu(x):

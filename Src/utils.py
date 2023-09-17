@@ -25,7 +25,6 @@ def createMatrix(dataset, idelta_x):
     green = separateChannel(squared, 1)
     blue = separateChannel(squared, 2)
     split_matrix = np.array([red,green,blue])
-    print(split_matrix.shape)
     return split_matrix
 
 # TODO: still error, for milestone 2 tho (multiple files)
@@ -46,7 +45,6 @@ def separateChannel(color_one,idelta_x):
     
 def squaredPadding(RGB_Matrix):
     height, width = RGB_Matrix.shape[0], RGB_Matrix.shape[1]
-    print(height,  width)
     matrix = np.zeros((height,width,3),dtype=int)
 
     if (height>width):
