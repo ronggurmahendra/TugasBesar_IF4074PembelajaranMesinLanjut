@@ -72,8 +72,8 @@ class ConvolutionLayer:
 
         # print("input_ : ", input_)
         print("input_.shape", input_.shape)
-        conv_height = (height - self.filter_size[0] + 1) // self.stride
-        conv_width = (width - self.filter_size[1] + 1) // self.stride
+        conv_height = (height - self.filter_size[0] + 1) // self.stride[0]
+        conv_width = (width - self.filter_size[1] + 1) // self.stride[1]
     
         print("self.filter_num, conv_height, conv_width = ", self.filter_num, conv_height, conv_width)
         
@@ -84,7 +84,7 @@ class ConvolutionLayer:
             for i in range(conv_height):
                 for j in range(conv_width):
                     ## TODO : ini sepemahaman aku mungkin salah, perlu di test 
-                    conv_region = input_[:,i*self.stride:i*self.stride + self.filter_size[0], j*self.stride:j*self.stride + self.filter_size[1]]
+                    conv_region = input_[:,i*self.stride[0]:i*self.stride[0] + self.filter_size[0], j*self.stride[1]:j*self.stride[1] + self.filter_size[1]]
                     print("conv_region.shape : ",conv_region.shape)
                     output[f, i, j] = np.sum(conv_region * self.filter)
         print("output : ", output)

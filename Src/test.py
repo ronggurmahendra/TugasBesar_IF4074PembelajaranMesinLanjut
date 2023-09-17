@@ -6,7 +6,7 @@ from CNN import *
 standard6x6x1 = np.array([[2,2,2,2,2,2],[2,2,2,2,2,2],[2,2,2,2,2,2],[2,2,2,2,2,2],[2,2,2,2,2,2],[2,2,2,2,2,2]])
 
 model = CNN()
-model.add(ConvolutionLayer(32, [3,3], 1, 2, standard6x6x1.shape))
+model.add(ConvolutionLayer(32, [3,3], 1, (2,2), standard6x6x1.shape))
 model.compile()
 output = model.predict(standard6x6x1)
 
