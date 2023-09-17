@@ -90,7 +90,7 @@ class ConvolutionLayer:
         print("output : ", output)
         print("output.shape : ", output.shape)
         return output
-    def compile(self, network_):
+    def compile(self, prev_layer_):
         pass
 class DetectorLayer:
     def feedForward(self, input_):
@@ -104,7 +104,8 @@ class DetectorLayer:
     
     def reLu(x):
         return max(0,x)
-    
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
     def compile(self, prev_layer_):
         pass
 class PoolingLayer:
@@ -163,10 +164,14 @@ class DenseLayer:
     def __init__(self, units_, activation_):
         self.units = units_
         self.weights = []
+        self.activation = activation_
 
     def feedForward(self, input_):
         input_ = np.append(input_, 1)
-        return np.dot(input_, self.weights)
+        if self.activation == "relu":
+            return np.array(list(map(lambda x: DetectorLayer.reLu(x),np.dot(input_, self.weights))))
+        elif self.activation == "sigmoid":
+            return np.array(list(map(lambda x: DetectorLayer.sigmoid(x),np.dot(input_, self.weights))))
 
     def compile(self, prev_layer_):
         if len(prev_layer_.feeding_shape) != 1:
