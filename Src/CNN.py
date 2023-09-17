@@ -60,11 +60,10 @@ class ConvolutionLayer:
         for f in range (self.filters):
             for i in range(conv_height):
                 for j in range(conv_width):
-                    ## TODO : hmmmm, perlu merenung dulu untuk disini tapi basically perhitungan convolusinya pake np.conv 
-                    # output[f,i,j] += np.
-                    output[f,i,j] += 1
-
-        return 0
+                    ## TODO : ini sepemahaman aku mungkin salah, perlu di test 
+                    conv_region = input_[i:i + self.filter_size[0], j:j + self.filter_size[1], :]
+                    output[f, i, j] = np.sum(conv_region * self.filters[f])
+        return output
     
 class DetectorLayer:
     def feedForward(self, input_):
