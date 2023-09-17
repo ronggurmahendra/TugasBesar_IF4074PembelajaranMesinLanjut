@@ -1,17 +1,20 @@
 import numpy as np
 
 class CNN: 
-    layers = []
 
     def __init__(self):
         ## TODO : kek nya ada parameter input dimentionya Cmiiw
         self.layers = []
+        self.is_compiled = False
     
     def add(self, layer_):
         self.layers.append(layer_)
 
     def predict(self, input_):
         # add a dimension to a single channel input
+        if self.is_compiled == False:
+            raise ValueError("Model is not compiled yet")
+        
         if len(input_.shape) == 2:
             input_ = np.expand_dims(input_, axis=0)
 
@@ -32,6 +35,11 @@ class CNN:
     def save_model(self):
         ## TODO : save layers nya ke file
         return 0
+
+    def compile(self):
+        for layer in self.layers:
+            layer.compile(self)
+        self.is_compiled = True
 
 
 class ConvolutionLayer:
@@ -67,7 +75,8 @@ class ConvolutionLayer:
                     conv_region = input_[i:i + self.filter_size[0], j:j + self.filter_size[1], :]
                     output[f, i, j] = np.sum(conv_region * self.filters[f])
         return output
-    
+    def compile(self, network_):
+        pass
 class DetectorLayer:
     def feedForward(self, input_):
         channel, height, width = input_.shape
@@ -80,6 +89,9 @@ class DetectorLayer:
     
     def reLu(x):
         return max(0,x)
+    
+    def compile(self, network_):
+        pass
 class PoolingLayer:
     kernel_size = [-1,-1]
     stride = 0 
@@ -112,23 +124,34 @@ class PoolingLayer:
                         ])
         return output
     
+    def compile(self, network_):
+        pass
+    
     def pooling(self, input_):
         if self.mode == "max":
             return np.max(input_)
         elif self.mode == "average":
             return np.average(input_)
     
+    def compile(self, network_):
+        pass
 
 class FlattenLayer:
     def feedForward(self, input_):
         return np.reshape(input_, (-1))
+    
+    def compile(self, network_):
+        pass
 
 
 class DenseLayer:
-    def __init__(self, units_, input_size_):
+    def __init__(self, units_, activation_):
         self.units = units_
         self.weights = np.random.rand(input_size_ + 1, units_)
 
     def feedForward(self, input_):
         input_ = np.append(input_, 1)
         return np.dot(input_, self.weights)
+
+    def compile(self, network_):
+        pass
