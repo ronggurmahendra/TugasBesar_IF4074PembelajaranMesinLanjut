@@ -78,7 +78,7 @@ class ConvolutionLayer:
                self.padding: self.padding + input_.shape[2]] = input_
 
         
-        print(input_padded)
+        print("input_padded : ", input_padded)
         
         channel, height, width = input_padded.shape
         print("filter_size : ", self.filter_size)
