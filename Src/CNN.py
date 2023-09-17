@@ -2,10 +2,12 @@ import numpy as np
 
 class CNN: 
 
-    def __init__(self):
+    def __init__(self, input_size_ = None):
         ## TODO : kek nya ada parameter input dimentionya Cmiiw
         self.layers = []
         self.is_compiled = False
+        self.input_size = input_size_
+        self.feeding_shape = input_size_
     
     def add(self, layer_):
         self.layers.append(layer_)
@@ -37,8 +39,11 @@ class CNN:
         return 0
 
     def compile(self):
-        for layer in self.layers:
-            layer.compile(self)
+        for i, layer in enumerate(self.layers):
+            if i == 0:
+                layer.compile(self)
+            else:
+                layer.compile(self.layers[i-1])
         self.is_compiled = True
 
 
@@ -90,7 +95,7 @@ class DetectorLayer:
     def reLu(x):
         return max(0,x)
     
-    def compile(self, network_):
+    def compile(self, prev_layer_):
         pass
 class PoolingLayer:
     kernel_size = [-1,-1]
@@ -124,7 +129,7 @@ class PoolingLayer:
                         ])
         return output
     
-    def compile(self, network_):
+    def compile(self, prev_layer_):
         pass
     
     def pooling(self, input_):
@@ -132,26 +137,28 @@ class PoolingLayer:
             return np.max(input_)
         elif self.mode == "average":
             return np.average(input_)
-    
-    def compile(self, network_):
-        pass
 
 class FlattenLayer:
     def feedForward(self, input_):
         return np.reshape(input_, (-1))
     
-    def compile(self, network_):
-        pass
+    def compile(self, prev_layer_):
+        total = 1
+        for x in prev_layer_.feeding_shape:
+            total *= x
+        self.feeding_shape = (total,)
 
 
 class DenseLayer:
     def __init__(self, units_, activation_):
         self.units = units_
-        self.weights = np.random.rand(input_size_ + 1, units_)
+        self.weights = []
 
     def feedForward(self, input_):
         input_ = np.append(input_, 1)
         return np.dot(input_, self.weights)
 
-    def compile(self, network_):
-        pass
+    def compile(self, prev_layer_):
+        if len(prev_layer_.feeding_shape) != 1:
+            raise ValueError("Invalid input shape for Dense Layer")
+        self.weights = np.random.rand(prev_layer_.feeding_shape[0] + 1, self.units)

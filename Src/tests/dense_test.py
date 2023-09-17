@@ -2,7 +2,7 @@ from Src.CNN import *
 from matrix_samples import *
 
 def test_standard3x3x1():
-    model = CNN()
+    model = CNN(input_size_=standard3x3x1.shape)
     model.add(FlattenLayer())
     model.add(DenseLayer(4, 9))
     model.compile()
