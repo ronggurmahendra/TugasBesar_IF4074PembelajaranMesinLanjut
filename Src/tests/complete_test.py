@@ -13,7 +13,7 @@ from matrix_samples import *
 
 def test_standard3x3x1_no_dense():
     model = CNN()
-    model.add(ConvolutionLayer(32, [3,3], 0, (0,1)))
+    model.add(ConvolutionLayer(32, [3,3], 0, 1, standard6x6x1.shape ))
     model.add(DetectorLayer())
     model.add(PoolingLayer((2,2), "max"))
     output = model.predict(standard6x6x1)

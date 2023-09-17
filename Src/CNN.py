@@ -1,5 +1,5 @@
 import numpy as np
-
+verbose = True
 class CNN: 
     layers = []
 
@@ -35,37 +35,45 @@ class CNN:
 
 
 class ConvolutionLayer:
-    filters = -1
-    kernel_size = [-1,-1]
+    filter_num = -1
+    filter_size = [-1,-1]
+    filter = [[]]
     padding = -1
     stride = -1
+    input_shape = [-1,-1,-1]
 
-    def __init__(self, filters_, kernel_size_, padding_, stride_):
+    def __init__(self, filter_num_, filter_size_, padding_, stride_, input_shape_):
         ## TODO : cek validitas input >1/ dimensi terhadap input matrix(perlu di infer dari layer sebelumnya)
-        self.filters = filters_
-        self.kernel_size = kernel_size_
+        self.filter_num = filter_num_
+        self.filter_size = filter_size_
         self.padding = padding_
         self.stride = stride_
-    
+        self.input_shape = input_shape_
+        self.filter = np.ones((self.filter_size[0], self.filter_size[1]))
 
     def feedForward(self, input_):
         ## TODO :  masi syntax error, baru implement secara algoritmik aja
-        # print(input_.shape)
-        height, width, channel = input_.shape
+        channel, height, width = input_.shape
+        print("filter_size : ", self.filter_size)
+        # print(self.filter)
 
-        # conv_height = height - self.filter_size[0] + 1
-        # conv_width = width - self.filter_size[1] + 1
-        conv_height = height - self.filters[0] + 1
-        conv_width = width - self.filters[1] + 1
-
-        output = np.zeros((self.filters, conv_height, conv_width)) # output feature map
+        # print("input_ : ", input_)
+        print("input_.shape", input_.shape)
+        conv_height = height - self.filter_size[0] + 1
+        conv_width = width - self.filter_size[1] + 1
         
-        for f in range (self.filters):
+        print("self.filter_num, conv_height, conv_width = ", self.filter_num, conv_height, conv_width)
+        
+        output = np.zeros((self.filter_num, conv_height, conv_width)) # output feature map
+        
+        print("output.shape", output.shape)
+        for f in range (self.filter_num):
             for i in range(conv_height):
                 for j in range(conv_width):
                     ## TODO : ini sepemahaman aku mungkin salah, perlu di test 
-                    conv_region = input_[i:i + self.filter_size[0], j:j + self.filter_size[1], :]
-                    output[f, i, j] = np.sum(conv_region * self.filters[f])
+                    conv_region = input_[:,i:i + self.filter_size[0], j:j + self.filter_size[1]]
+                    print("conv_region.shape : ",conv_region.shape)
+                    output[f, i, j] = np.sum(conv_region * self.filter)
         return output
     
 class DetectorLayer:
