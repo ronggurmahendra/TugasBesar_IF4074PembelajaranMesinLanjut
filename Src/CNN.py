@@ -62,7 +62,7 @@ class ConvolutionLayer:
         self.padding = padding_
         self.stride = stride_
         self.input_shape = input_shape_
-        self.filter = np.ones((self.filter_size[0], self.filter_size[1]))
+        self.filter = np.ones((self.filter_num,self.filter_size[0], self.filter_size[1]))
 
     def feedForward(self, input_):
         ## TODO :  masi syntax error, baru implement secara algoritmik aja
@@ -95,7 +95,7 @@ class ConvolutionLayer:
                 for j in range(conv_width):
                     ## TODO : ini sepemahaman aku mungkin salah, perlu di test 
                     conv_region = input_padded[:,i*self.stride[0]:i*self.stride[0] + self.filter_size[0], j*self.stride[1]:j*self.stride[1] + self.filter_size[1]]
-                    output[f, i, j] += np.sum(conv_region * self.filter)
+                    output[f, i, j] += np.sum(conv_region * self.filter[f])
         print("output : ", output)
         print("output.shape : ", output.shape)
         return output
