@@ -2,12 +2,15 @@ import numpy as np
 verbose = True
 class CNN: 
 
-    def __init__(self, input_size_ = None):
-        ## TODO : kek nya ada parameter input dimentionya Cmiiw
+    def __init__(self, input_shape_ = None):
         self.layers = []
         self.is_compiled = False
-        self.input_size = input_size_
-        self.feeding_shape = input_size_
+        self.input_shape = input_shape_
+
+        if len(self.input_shape) == 2:
+            self.input_shape = (1, self.input_shape[0], self.input_shape[1])
+        
+        self.feeding_shape = self.input_shape
     
     def add(self, layer_):
         self.layers.append(layer_)
@@ -56,22 +59,16 @@ class ConvolutionLayer:
     input_shape = [-1,-1,-1]
 
     def __init__(self, filter_num_, filter_size_, padding_, stride_, input_shape_ = [-1,-1]):
-        ## TODO : cek validitas input >1/ dimensi terhadap input matrix(perlu di infer dari layer sebelumnya)
         self.filter_num = filter_num_
         self.filter_size = filter_size_
         self.padding = padding_
         self.stride = stride_
         self.input_shape = input_shape_
         # self.filter = np.ones((self.filter_num,self.filter_size[0], self.filter_size[1]))
-        # self.filter = np.random.randint(1,10,size = (self.filter_num,self.filter_size[0], self.filter_size[1]))
         self.filter = np.random.random((self.filter_num,self.filter_size[0], self.filter_size[1]))
         
 
     def feedForward(self, input_):
-        ## TODO :  masi syntax error, baru implement secara algoritmik aja
-        # padding 
-        # input_padded = np.pad(input_,self.padding, 'constant', constant_values=0)
-        # pake np.pad nge pad channelnya juga
         input_height_padded = input_.shape[1] + 2 * self.padding
         input_width_padded = input_.shape[2] + 2 * self.padding
         
@@ -79,32 +76,28 @@ class ConvolutionLayer:
         input_padded[ : , 
                self.padding: self.padding + input_.shape[1],
                self.padding: self.padding + input_.shape[2]] = input_
-
         
-        print("input_padded : ", input_padded)
+        
         channel, height, width = input_padded.shape
 
-        print("filter : ", self.filter)
-        print("filter_size : ", self.filter_size)
-        print("input_padded.shape", input_padded.shape)
         conv_height = (height - self.filter_size[0] + 1) // self.stride[0]
         conv_width = (width - self.filter_size[1] + 1) // self.stride[1]
     
-        print("self.filter_num, conv_height, conv_width = ", self.filter_num, conv_height, conv_width)
         output = np.zeros((self.filter_num, conv_height, conv_width)) # output feature map
         
-        print("output.shape", output.shape)
         for f in range (self.filter_num):
             for i in range(conv_height):
                 for j in range(conv_width):
-                    ## TODO : ini sepemahaman aku mungkin salah, perlu di test 
                     conv_region = input_padded[:,i*self.stride[0]:i*self.stride[0] + self.filter_size[0], j*self.stride[1]:j*self.stride[1] + self.filter_size[1]]
                     output[f, i, j] += np.sum(conv_region * self.filter[f])
-        print("output : ", output)
-        print("output.shape : ", output.shape)
         return output
     def compile(self, prev_layer_):
-        pass
+        self.input_shape = prev_layer_.feeding_shape
+        input_height_padded = prev_layer_.feeding_shape[1] + 2 * self.padding
+        input_width_padded = prev_layer_.feeding_shape[2] + 2 * self.padding
+        if len(prev_layer_.feeding_shape) != 3:
+            raise ValueError("Invalid input shape for Convolution Layer")
+        self.feeding_shape = (self.filter_num, (input_height_padded - self.filter_size[0] + 1) // self.stride[0], (input_width_padded - self.filter_size[1] + 1) // self.stride[1])
 class DetectorLayer:
     def feedForward(self, input_):
         channel, height, width = input_.shape
@@ -120,7 +113,7 @@ class DetectorLayer:
     def sigmoid(x):
         return 1 / (1 + np.exp(-x))
     def compile(self, prev_layer_):
-        pass
+        self.feeding_shape = prev_layer_.feeding_shape
 class PoolingLayer:
     kernel_size = [-1,-1]
     stride = 0 
@@ -154,7 +147,8 @@ class PoolingLayer:
         return output
     
     def compile(self, prev_layer_):
-        pass
+        channel, input_height, input_width = prev_layer_.feeding_shape
+        self.feeding_shape = (channel, input_height // self.stride[0], input_width // self.stride[1])
     
     def pooling(self, input_):
         if self.mode == "max":
@@ -190,3 +184,4 @@ class DenseLayer:
         if len(prev_layer_.feeding_shape) != 1:
             raise ValueError("Invalid input shape for Dense Layer")
         self.weights = np.random.rand(prev_layer_.feeding_shape[0] + 1, self.units)
+        self.feeding_shape = (self.units,)
