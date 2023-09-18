@@ -12,15 +12,15 @@ def readDatasets():
     pandas = []
     with os.scandir(PANDA_PATH) as files:
         for file in files:
-            if file.name.endswith('.jpg'):
+            if file.name.endswith('.jpeg'):
                 pandas.append(file.name)
     return pandas
 
 def createMatrix(dataset, idelta_x):
     image = Image.open(PANDA_PATH+'/'+dataset[idelta_x])
-    data = asarray(image)
+    squared = asarray(image)
 
-    squared = squaredPadding(data)
+    # squared = squaredPadding(data)
     red = separateChannel(squared, 0)
     green = separateChannel(squared, 1)
     blue = separateChannel(squared, 2)
@@ -63,5 +63,5 @@ def squaredPadding(RGB_Matrix):
     return matrix
 
 
-ROOT = os.path.dirname(os.path.abspath(__file__)) +'/../data'
+ROOT = os.path.dirname(os.path.abspath(__file__)) +'../../data'
 PANDA_PATH = createPath("milestone_1")
