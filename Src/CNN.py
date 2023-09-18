@@ -62,21 +62,35 @@ class ConvolutionLayer:
         self.padding = padding_
         self.stride = stride_
         self.input_shape = input_shape_
-        self.filter = np.ones((self.filter_size[0], self.filter_size[1]))
+        # self.filter = np.ones((self.filter_num,self.filter_size[0], self.filter_size[1]))
+        # self.filter = np.random.randint(1,10,size = (self.filter_num,self.filter_size[0], self.filter_size[1]))
+        self.filter = np.random.random((self.filter_num,self.filter_size[0], self.filter_size[1]))
+        
 
     def feedForward(self, input_):
         ## TODO :  masi syntax error, baru implement secara algoritmik aja
-        channel, height, width = input_.shape
-        print("filter_size : ", self.filter_size)
-        # print(self.filter)
+        # padding 
+        # input_padded = np.pad(input_,self.padding, 'constant', constant_values=0)
+        # pake np.pad nge pad channelnya juga
+        input_height_padded = input_.shape[1] + 2 * self.padding
+        input_width_padded = input_.shape[2] + 2 * self.padding
+        
+        input_padded = np.zeros((input_.shape[0], input_height_padded, input_width_padded))
+        input_padded[ : , 
+               self.padding: self.padding + input_.shape[1],
+               self.padding: self.padding + input_.shape[2]] = input_
 
-        # print("input_ : ", input_)
-        print("input_.shape", input_.shape)
-        conv_height = height - self.filter_size[0] + 1
-        conv_width = width - self.filter_size[1] + 1
         
+        print("input_padded : ", input_padded)
+        channel, height, width = input_padded.shape
+
+        print("filter : ", self.filter)
+        print("filter_size : ", self.filter_size)
+        print("input_padded.shape", input_padded.shape)
+        conv_height = (height - self.filter_size[0] + 1) // self.stride[0]
+        conv_width = (width - self.filter_size[1] + 1) // self.stride[1]
+    
         print("self.filter_num, conv_height, conv_width = ", self.filter_num, conv_height, conv_width)
-        
         output = np.zeros((self.filter_num, conv_height, conv_width)) # output feature map
         
         print("output.shape", output.shape)
@@ -84,9 +98,8 @@ class ConvolutionLayer:
             for i in range(conv_height):
                 for j in range(conv_width):
                     ## TODO : ini sepemahaman aku mungkin salah, perlu di test 
-                    conv_region = input_[:,i:i + self.filter_size[0], j:j + self.filter_size[1]]
-                    print("conv_region.shape : ",conv_region.shape)
-                    output[f, i, j] = np.sum(conv_region * self.filter)
+                    conv_region = input_padded[:,i*self.stride[0]:i*self.stride[0] + self.filter_size[0], j*self.stride[1]:j*self.stride[1] + self.filter_size[1]]
+                    output[f, i, j] += np.sum(conv_region * self.filter[f])
         print("output : ", output)
         print("output.shape : ", output.shape)
         return output
