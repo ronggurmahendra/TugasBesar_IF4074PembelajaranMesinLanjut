@@ -62,6 +62,48 @@ def squaredPadding(RGB_Matrix):
 
     return matrix
 
+def multiply_arrays(arr1, arr2):
+    """
+    Multiply each element in arr1 with each element in arr2.
+
+    Parameters:
+    arr1 (numpy.ndarray): First array.
+    arr2 (numpy.ndarray): Second array.
+
+    Returns:
+    numpy.ndarray: Resulting 2x10 matrix.
+    """
+    result = np.zeros((len(arr1), len(arr2)))
+    
+    for i in range(len(arr1)):
+        for j in range(len(arr2)):
+            result[i][j] = arr1[i] * arr2[j]
+
+    return result
+
+
+def multiply_and_sum(arr1, arr2):
+    """
+    Multiply each row of arr2 by the array arr1 element-wise and sum the products for each row.
+
+    Parameters:
+    arr1 (numpy.ndarray): First array.
+    arr2 (numpy.ndarray): Second array.
+
+    Returns:
+    numpy.ndarray: Resulting array after summing the products for each row.
+    """
+    # Reshape arr1 to match the dimensions of arr2
+    arr1_reshaped = arr1.reshape(1, -1)
+
+    # Multiply each row of arr2 with arr1 element-wise
+    multiplied = arr2 * arr1_reshaped
+
+    # Sum the products for each row
+    result = np.sum(multiplied, axis=1)
+    return result
 
 ROOT = os.path.dirname(os.path.abspath(__file__)) +'../../data'
 PANDA_PATH = createPath("milestone_1")
+
+
