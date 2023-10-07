@@ -1,7 +1,15 @@
 import numpy as np
-
+import math
 from utils import *
 verbose = True
+
+# bias convolution - OKAY
+# update dense bias
+# update convolution bias
+# handling batch
+# update weight based on batch
+# update bias based on batch
+
 class CNN: 
 
     def __init__(self, input_shape_ = None):
@@ -31,7 +39,7 @@ class CNN:
             input_ = output
         return output
     
-    def fit(self, input_, epochs):
+    def fit(self, input_, epochs, error_function="log_loss", learning_rate=0.01, batch_size=1):
         if self.is_compiled == False:
             raise ValueError("Model is not compiled yet")
         
@@ -39,10 +47,12 @@ class CNN:
             input_ = np.expand_dims(input_, axis=0)
         
         int_dict = {i: [] for i in range(len(self.layers))}
-
         
+        data = input_
         for i in range(epochs):
-            output = []  
+            output = []
+            input_ = data
+            # feed forwarding
             for j in range(len(self.layers)):
                 layer = self.layers[j]
                 output = layer.feedForward(input_)
@@ -57,16 +67,16 @@ class CNN:
                 layer = self.layers[j]
                 # TODO: Menghitung turunan berdasarkan loss function yang digunakan
                 if (j == len(self.layers)-1):
-                    temp = layer.output
-                    temp[9] = -(1-temp[9])
-                    layer.dOutput = temp
-                    dE_dW = multiply_arrays(layer.dOutput, layer.prev_layer.output)
-                    
-
-                    # self.dOutput = layer.output
+                    if error_function == "log_loss":
+                        output_class = np.argmax(layer.output)
+                        layer.dOutput = np.array([p if i != output_class else p - 1 for i, p in enumerate(layer.output)])
+                    dE_dW = np.array(multiply_arrays(layer.dOutput, layer.prev_layer.output))
+                    # update weight
+                    layer.weights -= dE_dW.T * learning_rate
+                    layer.bias -= layer.dOutput * learning_rate
+                    layer.dWn = dE_dW
                 else:
                     dE_dW = layer.backprop()
-
                 print("LAYER:", j)
                 print(dE_dW)
                 # print(dE_dW.T)
@@ -114,17 +124,18 @@ class ConvolutionLayer:
         self.padding = padding_
         self.stride = stride_
         self.input_shape = input_shape_
-        # self.filter = np.ones((self.filter_num,self.filter_size[0], self.filter_size[1]))
+        self.filter = np.ones((self.filter_num,self.filter_size[0], self.filter_size[1]))
         # self.filter = np.random.random((self.filter_num,self.filter_size[0], self.filter_size[1]))
-        self.filter = np.array([[
-            [1,2,3],
-            [4,7,5],
-            [3,-32,25]
-        ],[
-            [12,18,12],
-            [18,-74,45],
-            [-92,45,-18]
-        ]])
+        # self.filter = np.array([[
+        #     [1,2,3],
+        #     [4,7,5],
+        #     [3,-32,25]
+        # ],[
+        #     [12,18,12],
+        #     [18,-74,45],
+        #     [-92,45,-18]
+        # ]])
+        self.bias = np.zeros(self.filter_num)
         print("FILTER")
         print(self.filter)
         
@@ -153,7 +164,7 @@ class ConvolutionLayer:
             for i in range(conv_height):
                 for j in range(conv_width):
                     conv_region = input_padded[:,i*self.stride[0]:i*self.stride[0] + self.filter_size[0], j*self.stride[1]:j*self.stride[1] + self.filter_size[1]]
-                    output[f, i, j] += np.sum(conv_region * self.filter[f])
+                    output[f, i, j] += np.sum(conv_region * self.filter[f]) + self.bias[f]
         self.output = output
         return output
     
@@ -167,7 +178,7 @@ class ConvolutionLayer:
             raise ValueError("Invalid input shape for Convolution Layer")
         self.feeding_shape = (self.filter_num, (input_height_padded - self.filter_size[0] + 1) // self.stride[0], (input_width_padded - self.filter_size[1] + 1) // self.stride[1])
     
-    def backprop(self):
+    def backprop(self, learning_rate=0.01):
         input_ = self.input_matrix
         input_height_padded = input_.shape[1] + 2 * self.padding
         input_width_padded = input_.shape[2] + 2 * self.padding
@@ -191,6 +202,9 @@ class ConvolutionLayer:
                     conv_region = input_padded[:,i*self.stride[0]:i*self.stride[0] + self.next_layer.dWn.shape[1], j*self.stride[1]:j*self.stride[1] + self.next_layer.dWn.shape[2]]
                     output[f, i, j] += np.sum(conv_region * self.next_layer.dWn[f])
         self.dWn = output
+        dE_dB = np.sum(self.next_layer.dWn, axis=(1, 2))
+        self.filter = np.array([f - learning_rate * df for f, df in zip(self.filter, self.dWn)])
+        self.bias = np.array([f - learning_rate * df for f, df in zip(self.bias, dE_dB)])
         return self.dWn
 
 class DetectorLayer:
@@ -222,6 +236,20 @@ class DetectorLayer:
     def backprop(self):
         self.dWn = self.next_layer.dWn
         return self.dWn
+    def softmax(x):
+        maxEl = max(x)
+        sum_value = 0
+        for value in x:
+            sum_value += np.exp(value - maxEl)
+        arr_result = []
+
+        for value in x:
+            arr_result.append(np.exp(value - maxEl)/sum_value)
+            if math.isnan(arr_result[-1]):
+                print("Is nan", x)
+        return arr_result
+def derived_softmax(x, target):
+    return x if 1 != target else -(1-x)
     
 class PoolingLayer:
     kernel_size = [-1,-1]
@@ -328,6 +356,7 @@ class FlattenLayer:
     def backprop(self):
         self.dOutput = self.next_layer.dOutput
         self.weights = self.next_layer.weights
+        self.dWn = self.next_layer.dWn
         return self.next_layer.dWn
 
 
@@ -345,21 +374,22 @@ class DenseLayer:
         self.units = units_
         self.weights = weights_
         self.activation = activation_
-
+        self.bias = []
 
     def feedForward(self, input_):
-        # input_ = np.append(input_)
-        self.output_no_activation = np.dot(input_, self.weights) 
+        # for loop through input
+        return np.array(self.ff(input_))
+
+    def ff(self, entity):
         if self.activation == "relu":
-            self.output = np.array(list(map(lambda x: DetectorLayer.reLu(x),np.dot(input_, self.weights))))
-            return np.array(list(map(lambda x: DetectorLayer.reLu(x),np.dot(input_, self.weights))))
+            self.output = np.array(list(map(lambda x: DetectorLayer.reLu(x),np.dot(entity, self.weights))))
+            return np.array(list(map(lambda x: DetectorLayer.reLu(x),np.dot(entity, self.weights) + self.bias)))
         elif self.activation == "sigmoid":
-            self.output = np.array(list(map(lambda x: DetectorLayer.sigmoid(x),np.dot(input_, self.weights))))
-            return np.array(list(map(lambda x: DetectorLayer.sigmoid(x),np.dot(input_, self.weights))))
+            self.output = np.array(list(map(lambda x: DetectorLayer.sigmoid(x),np.dot(entity, self.weights))))
+            return np.array(list(map(lambda x: DetectorLayer.sigmoid(x),np.dot(entity, self.weights) + self.bias)))
         elif self.activation == "softmax":
-            self.output = DetectorLayer.softmax(np.dot(input_, self.weights))
-            return  DetectorLayer.softmax(np.dot(input_, self.weights))
-            # return np.array(list(map(lambda x: DetectorLayer.softmax(x),[np.dot(input_, self.weights)]))) 
+            self.output = DetectorLayer.softmax(np.dot(entity, self.weights))
+            return DetectorLayer.softmax(np.dot(entity, self.weights) + self.bias) 
 
     def dO_dW(self):
         return self.prev_layer.output
@@ -375,8 +405,10 @@ class DenseLayer:
                 input_arr[i] = 0
         return input_arr
 
-    def backprop(self):
+    def backprop(self, learning_rate=0.01):
         self.dWn = multiply_arrays(self.dE_dO(), self.dO_dW())
+        self.weights -= self.dWn.T * learning_rate
+        self.bias -= self.dE_dO() * learning_rate
         return self.dWn
 
     def compile(self, prev_layer_, next_layer=None):
@@ -385,6 +417,6 @@ class DenseLayer:
         self.prev_layer = prev_layer_
         if len(prev_layer_.feeding_shape) != 1:
             raise ValueError("Invalid input shape for Dense Layer")
-        if len(self.weights) == 0:
-             self.weights = np.random.rand(prev_layer_.feeding_shape[0] + 1, self.units)
+        self.weights = np.random.rand(prev_layer_.feeding_shape[0], self.units)
+        self.bias = np.random.rand(self.units)
         self.feeding_shape = (self.units,)
