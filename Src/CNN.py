@@ -19,20 +19,34 @@ class CNN:
         # add a dimension to a single channel input
         if self.is_compiled == False:
             raise ValueError("Model is not compiled yet")
-        
         if len(input_.shape) == 2:
             input_ = np.expand_dims(input_, axis=0)
-
         output = []  
         for layer in self.layers:
             output = layer.feedForward(input_)
             input_ = output
         return output
     
-    def fit(self):
-        ## TODO : ini tahap back prop nya ngga di dalem milestone 1 CMIIW
-        return 0
+    def fit(self, X, Y, epoch=1, batch_size=1, learning_rate=0.01, verbose=False):
+        if self.is_compiled == False:
+            raise ValueError("Model is not compiled yet")
+        batches = np.array_split(X, len(X) / batch_size)
+        output_batches = np.array_split(Y, len(Y) / batch_size)
 
+        for i in range(epoch):
+            for batch, output_batch in zip(batches, output_batches):
+                output = self.predict(batch)
+                accuracy = np.sum(np.argmax(output, axis=1) == np.argmax(output_batch, axis=1)) / batch_size
+                error = np.sum(np.square(output_batch - output)) / batch_size
+                if verbose:
+                    print("Epoch: ", i, " Accuracy: ", accuracy, " Error: ", error)
+                dE_dO = (output_batch - output) / batch_size
+                for layer in reversed(self.layers):
+                    dE_dO = layer.backprop(dE_dO, learning_rate)
+            output = self.predict(batch)
+            accuracy = np.sum(np.argmax(output, axis=1) == np.argmax(output_batch, axis=1)) / batch_size
+            print("Epoch: ", i, " Accuracy: ", accuracy)
+        print("Training finished")
     def load_model(self):
         ## TODO :  load model nya masukin ke layers
         return 0
@@ -109,9 +123,13 @@ class DetectorLayer:
         return output
     
     def reLu(x):
-        return max(0,x)
+        return np.maximum(0,x)
     def sigmoid(x):
         return 1 / (1 + np.exp(-x))
+    def reLu_derivative(x):
+        x[x<=0] = 0
+        x[x>0] = 1
+        return x
     def compile(self, prev_layer_):
         self.feeding_shape = prev_layer_.feeding_shape
 class PoolingLayer:
@@ -158,8 +176,11 @@ class PoolingLayer:
 
 class FlattenLayer:
     def feedForward(self, input_):
-        return np.reshape(input_, (-1))
+        return np.array([np.reshape(d, (-1)) for d in input_])
     
+    def backprop(self, dE_dO, learning_rate):
+        return dE_dO
+
     def compile(self, prev_layer_):
         total = 1
         for x in prev_layer_.feeding_shape:
@@ -171,17 +192,41 @@ class DenseLayer:
     def __init__(self, units_, activation_):
         self.units = units_
         self.weights = []
+        self.bias = []
         self.activation = activation_
-
-    def feedForward(self, input_):
-        input_ = np.append(input_, 1)
+        self.output = []
+        self.input = []
+    def feedForward(self, batch_input):
+        # add a dimension to input_ because it is seen as a batch
+        if len(batch_input.shape) == 1:
+            batch_input = np.expand_dims(batch_input, axis=0)
+        self.input = batch_input
         if self.activation == "relu":
-            return np.array(list(map(lambda x: DetectorLayer.reLu(x),np.dot(input_, self.weights))))
+            self.output = np.asarray([DetectorLayer.reLu(np.dot(d, self.weights) + self.bias) for d in batch_input])
         elif self.activation == "sigmoid":
-            return np.array(list(map(lambda x: DetectorLayer.sigmoid(x),np.dot(input_, self.weights))))
+            self.output = np.asarray([np.array(list(map(lambda x: DetectorLayer.sigmoid(x),np.dot(d, self.weights) + self.bias))) for d in batch_input])
 
+        return self.output
+    # backprop is performed in each batch
+    def backprop(self, dE_dO, learning_rate):
+        dE_dO = np.array(dE_dO)
+        dO_dN = DetectorLayer.reLu_derivative(self.output)
+        dN_dW = self.input
+        dE_dN = (dE_dO * dO_dN)
+        dE_dW = np.zeros(self.weights.shape)
+        print(dE_dN.shape, dN_dW.shape, dE_dW.shape)
+        for i in range(len(dN_dW)):
+            dE_dW += (np.outer(dN_dW[i], dE_dN[i]) / len(dE_dN))
+        self.weights -= learning_rate * dE_dW
+        self.bias -= learning_rate * np.sum(dE_dN) / len(dE_dN)
+
+        dN_dI = self.weights
+        dE_dI = np.array(list(map(lambda x: x * dN_dI, dE_dN)))
+        return np.dot(dE_dI, self.weights.T)
     def compile(self, prev_layer_):
-        if len(prev_layer_.feeding_shape) != 1:
+        if len(prev_layer_.feeding_shape) > 2:
             raise ValueError("Invalid input shape for Dense Layer")
-        self.weights = np.random.rand(prev_layer_.feeding_shape[0] + 1, self.units)
+        # self.weights = np.random.rand(prev_layer_.feeding_shape[0] + 1, self.units)
+        self.weights = np.ones((prev_layer_.feeding_shape[0], self.units))
+        self.bias = np.ones((self.units))
         self.feeding_shape = (self.units,)
