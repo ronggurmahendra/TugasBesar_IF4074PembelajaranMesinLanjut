@@ -346,9 +346,10 @@ class DetectorLayer:
         return x
     def sigmoid_derivative(x):
         return DetectorLayer.sigmoid(x) * (1 - DetectorLayer.sigmoid(x))
-    def compile(self, prev_layer_):
+    def compile(self, prev_layer_, next_layer=None):
+        if next_layer != None:
+            self.next_layer = next_layer
         self.feeding_shape = prev_layer_.feeding_shape
-
 class PoolingLayer:
     kernel_size = [-1,-1]
     stride = 0 
