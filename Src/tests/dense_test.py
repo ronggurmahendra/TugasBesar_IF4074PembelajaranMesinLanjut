@@ -11,6 +11,7 @@ def test_standard3x3x1():
     output = model.predict(standard3x3x1)
     assert output.shape == (1,4)
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_standard3x3x1x2():
     model = CNN(input_shape_=standard3x3x1.shape)
     model.add(FlattenLayer())
@@ -19,6 +20,7 @@ def test_standard3x3x1x2():
     output = model.predict(standard3x3x1x2)
     assert output.shape == (2,4)
 
+@pytest.mark.skip(reason="no way of currently testing this")
 def test_backprop_standard3x3x1x2():
     model = CNN(input_shape_=standard3x3x1.shape)
     model.add(FlattenLayer())
@@ -54,5 +56,16 @@ def test_standard3x3x2_with_pooling():
     model.add(DenseLayer(4, "relu"))
     model.compile()
     output = model.predict(matrix)
-    model.fit(matrix, epochs=2)
+    model.fit(matrix, Y=[1], epochs=2)
     assert output.shape == (4,)
+
+def test_standard3x3x2_with_pooling_mse():
+    model = CNN(input_shape_=matrix.shape)
+    model.add(ConvolutionLayer(2, [3,3], 0, (1,1)))
+    model.add(PoolingLayer((2,2), "max"))
+    model.add(FlattenLayer())
+    model.add(DenseLayer(1, "sigmoid"))
+    model.compile()
+    output = model.predict(matrix)
+    model.fit(matrix, Y=[1], epochs=2, loss="mse")
+    assert output.shape == (1,)

@@ -39,11 +39,13 @@ class CNN:
             input_ = output
         return output
     
-    def fit(self, input_, epochs, error_function="log_loss", learning_rate=0.01, batch_size=1):
+    def fit(self, input_, Y, epochs, loss="log_loss", learning_rate=0.01, batch_size=1):
         if self.is_compiled == False:
             raise ValueError("Model is not compiled yet")
         
         if len(input_.shape) == 2:
+            input_ = np.expand_dims(input_, axis=0)
+        if len(input_.shape) == 3:
             input_ = np.expand_dims(input_, axis=0)
         
         int_dict = {i: [] for i in range(len(self.layers))}
@@ -53,33 +55,28 @@ class CNN:
             output = []
             input_ = data
             # feed forwarding
-            for j in range(len(self.layers)):
-                layer = self.layers[j]
-                output = layer.feedForward(input_)
-                int_dict[j] = output
-                input_ = output
-
-            for j in range(len(self.layers)-1, -1, -1):
-                layer = self.layers[j]
-                print(layer.output)
-
-            for j in range(len(self.layers)-1, -1, -1):
-                layer = self.layers[j]
-                # TODO: Menghitung turunan berdasarkan loss function yang digunakan
-                if (j == len(self.layers)-1):
-                    if error_function == "log_loss":
-                        output_class = np.argmax(layer.output)
-                        layer.dOutput = np.array([p if i != output_class else p - 1 for i, p in enumerate(layer.output)])
-                    dE_dW = np.array(multiply_arrays(layer.dOutput, layer.prev_layer.output))
-                    # update weight
-                    layer.weights -= dE_dW.T * learning_rate
-                    layer.bias -= layer.dOutput * learning_rate
-                    layer.dWn = dE_dW
-                else:
-                    dE_dW = layer.backprop()
-                print("LAYER:", j)
-                print(dE_dW)
-                # print(dE_dW.T)
+            for i, d in enumerate(input_):
+                print(input_)
+                for j in range(len(self.layers)):
+                    layer = self.layers[j]
+                    output = layer.feedForward(d)
+                    int_dict[j] = output
+                    d = output
+                for j in range(len(self.layers)-1, -1, -1):
+                    layer = self.layers[j]
+                    if (j == len(self.layers)-1):
+                        if loss == "log_loss":
+                            output_class = Y[i]
+                            layer.dOutput = np.array([p if i != output_class else p - 1 for i, p in enumerate(layer.output)])
+                        elif loss == "mse":
+                            layer.dOutput = np.array([p - Y[i] for p in layer.output]) * DetectorLayer.sigmoid_derivative(layer.output)
+                        dE_dW = np.array(multiply_arrays(layer.dOutput, layer.prev_layer.output))
+                        # update weight
+                        layer.weights -= dE_dW.T * learning_rate
+                        layer.bias -= layer.dOutput * learning_rate
+                        layer.dWn = dE_dW
+                    else:
+                        dE_dW = layer.backprop()
 
             
     def load_model(self, filename):
