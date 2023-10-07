@@ -67,5 +67,5 @@ def test_standard3x3x2_with_pooling_mse():
     model.add(DenseLayer(1, "sigmoid"))
     model.compile()
     output = model.predict(matrix)
-    model.fit(matrix, Y=[1], epochs=2, loss="mse")
+    model.fit(matrix, Y=[0], epochs=2, loss="mse")
     assert output.shape == (1,)
