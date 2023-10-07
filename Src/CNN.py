@@ -57,17 +57,17 @@ class CNN:
         int_dict = {i: [] for i in range(len(self.layers))}
         
         data = input_
-        for i in range(epochs):
+        for e in range(epochs):
             output = []
             input_ = data
             # feed forwarding
             for i, d in enumerate(input_):
-                print(input_)
                 for j in range(len(self.layers)):
                     layer = self.layers[j]
                     output = layer.feedForward(d)
                     int_dict[j] = output
                     d = output
+                print("Output: ", output)
                 for j in range(len(self.layers)-1, -1, -1):
                     layer = self.layers[j]
                     if (j == len(self.layers)-1):
@@ -76,6 +76,7 @@ class CNN:
                             layer.dOutput = np.array([p if i != output_class else p - 1 for i, p in enumerate(layer.output)])
                         elif loss == "mse":
                             layer.dOutput = np.array([p - Y[i] for p in layer.output]) * DetectorLayer.sigmoid_derivative(layer.output)
+                        print("dOutput: ", layer.dOutput)
                         dE_dW = np.array(multiply_arrays(layer.dOutput, layer.prev_layer.output))
                         # update weight
                         layer.weights -= dE_dW.T * learning_rate
@@ -83,8 +84,28 @@ class CNN:
                         layer.dWn = dE_dW
                     else:
                         dE_dW = layer.backprop()
+            output = self.predict(data)
+            print("\n")
+            print("Epoch ", e + 1)
+            accuracy = 0
+            print("Weights: ", self.layers[3].weights)
+            if loss == "log_loss":
+                for i, o in enumerate(output):
+                    if np.argmax(o) == Y[i]:
+                        accuracy += 1
+                accuracy /= len(output)
+                print("Accuracy: ", )
+            elif loss == "mse":
+                for i, o in enumerate(output):
+                    if o > 0.5:
+                        o = 1
+                    else:
+                        o = 0
+                    if o == Y[i]:
+                        accuracy += 1
+                accuracy /= len(output)
+                print("Accuracy: ", accuracy)
 
-            
     def load_model(self, filename):
         
         loaded_layers = []
@@ -226,25 +247,12 @@ class ConvolutionLayer:
         self.padding = padding_
         self.stride = stride_
         self.input_shape = input_shape_
-        self.filter = np.ones((self.filter_num,self.filter_size[0], self.filter_size[1]))
-        # self.filter = np.random.random((self.filter_num,self.filter_size[0], self.filter_size[1]))
-        # self.filter = np.array([[
-        #     [1,2,3],
-        #     [4,7,5],
-        #     [3,-32,25]
-        # ],[
-        #     [12,18,12],
-        #     [18,-74,45],
-        #     [-92,45,-18]
-        # ]])
+        self.filter = np.random.rand(self.filter_num,self.filter_size[0], self.filter_size[1])
         self.bias = np.zeros(self.filter_num)
-        print("FILTER")
-        print(self.filter)
+
         
 
     def feedForward(self, input_):
-        
-
         self.input_matrix = input_
         input_height_padded = input_.shape[1] + 2 * self.padding
         input_width_padded = input_.shape[2] + 2 * self.padding
@@ -319,7 +327,6 @@ class DetectorLayer:
         for c in range (channel):
             for i in range(height):
                 for j in range(width):
-                    print("output:", input_[c,i,j])
                     output[c,i,j] = DetectorLayer.reLu(input_[c,i,j])
         self.output = output
         return output
@@ -383,12 +390,6 @@ class PoolingLayer:
         for ch in range(channel):
             for i in range(output_height):
                 for j in range(output_width):
-                    print("INPUT:")
-                    print(input_[
-                        ch,
-                        i*self.stride[0]:(i+1)*self.filter_size[0],
-                        j*self.stride[1]:(j+1)*self.filter_size[1]
-                        ])
                     output[ch,i,j], row, col = self.pooling(input_[
                         ch,
                         i*self.stride[0]:(i+1)*self.filter_size[0],
@@ -396,7 +397,6 @@ class PoolingLayer:
                         ])
                     self.max_pool_index.append((row, col))
         self.output = output
-        # print("Pooling output:", output[0][0])
         return output
     
     def compile(self, prev_layer_, next_layer=None):
