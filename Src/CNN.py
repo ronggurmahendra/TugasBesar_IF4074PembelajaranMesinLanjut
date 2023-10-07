@@ -1,4 +1,6 @@
 import numpy as np
+import json
+
 verbose = True
 class CNN: 
 
@@ -47,13 +49,116 @@ class CNN:
             accuracy = np.sum(np.argmax(output, axis=1) == np.argmax(output_batch, axis=1)) / batch_size
             print("Epoch: ", i, " Accuracy: ", accuracy)
         print("Training finished")
-    def load_model(self):
-        ## TODO :  load model nya masukin ke layers
-        return 0
+    def load_model(self, filename):
+        
+        loaded_layers = []
 
-    def save_model(self):
-        ## TODO : save layers nya ke file
-        return 0
+        with open(filename, "r") as json_file:
+            serialized_layers = json.load(json_file)
+        
+        for layer_data in serialized_layers:
+            if layer_data["type"] == "ConvolutionLayer":
+               
+                filter_num_ = layer_data["params"]["filter_num"]
+                filter_size_ = layer_data["params"]["filter_size"]
+                filter_ = layer_data["params"]["filter"]
+                bias_ = layer_data["params"]["bias"]
+                padding_ = layer_data["params"]["padding"]
+                stride_ = layer_data["params"]["stride"]
+                input_shape_ = layer_data["params"]["input_shape"]
+
+                layer = ConvolutionLayer(filter_num_, filter_size_, padding_, stride_, input_shape_)
+                layer.filter = filter_
+                layer.filter = bias_
+            elif layer_data["type"] == "DetectorLayer":
+                layer = DetectorLayer()
+            elif layer_data["type"] == "PoolingLayer":
+                kernel_size_ = layer_data["params"]["kernel_size"]
+                stride_ = layer_data["params"]["stride"]
+                mode_ = layer_data["params"]["mode"]
+                
+                layer = PoolingLayer(kernel_size_, mode_, stride_ = stride_)
+            elif layer_data["type"] == "FlattenLayer":
+                layer = FlattenLayer()
+            elif layer_data["type"] == "DenseLayer":
+
+                units_ = layer_data["params"]["units"]
+                weights_ = layer_data["params"]["weights"]
+                bias_ = layer_data["params"]["bias"]
+                activation_ = layer_data["params"]["activation"]
+                output_ = layer_data["params"]["output"]
+                input_  = layer_data["params"]["input"]
+
+                layer = DenseLayer(units_, activation_)
+                layer.bias = bias_
+                layer.weights = layer.weights_
+                layer.output = output_
+                layer.input = input_
+            else:
+                print("Layer not detected, something went wrong")
+            loaded_layers.append(layer)
+        self.layers = loaded_layers
+
+        return 1
+
+    def save_model(self, filename):
+        serialized_layers = []
+        for layer in self.layers:
+            if isinstance(layer, ConvolutionLayer):
+                layer_data = {
+                    "type" : "ConvolutionLayer",
+                    "params" : {
+                        "filter_num": layer.filter_num,
+                        "filter_size": layer.filter_size,
+                        "filter": layer.filter.tolist(),
+                        "bias": layer.bias,
+                        "padding": layer.padding,
+                        "stride": layer.stride,
+                        "input_shape": layer.input_shape,
+                    }
+                }
+            elif isinstance(layer,DetectorLayer):
+                layer_data = {
+                    "type" : "DetectorLayer",
+                    "params" : {
+
+                    }
+                }
+            elif isinstance(layer,PoolingLayer):
+                layer_data = {
+                    "type" : "PoolingLayer",
+                    "params" : {
+                        "kernel_size" : layer.kernel_size,
+                        "stride" : layer.stride,
+                        "mode" : layer.mode,
+                    }
+                }
+            elif isinstance(layer,FlattenLayer):
+                layer_data = {
+                    "type" : "FlattenLayer",
+                    "params" : {}
+                }
+            elif isinstance(layer,DenseLayer):
+                layer_data = {
+                    "type" : "DenseLayer",
+                    "params" : {
+                        "units" : layer.units ,
+                        "weights" : layer.weights ,
+                        "bias" : layer.bias ,
+                        "activation" : layer.activation,
+                        "output" : layer.output,
+                        "input" : layer.input,
+                    }
+                }
+            else:
+                print("Layer not detected, something went wrong")
+                return
+            serialized_layers.append(layer_data)
+
+        with open(filename, "w") as json_file:
+            json.dump(serialized_layers, json_file)
+
+        return 1
 
     def compile(self):
         for i, layer in enumerate(self.layers):
@@ -68,6 +173,7 @@ class ConvolutionLayer:
     filter_num = -1
     filter_size = [-1,-1]
     filter = [[]]
+    bias = 1
     padding = -1
     stride = -1
     input_shape = [-1,-1,-1]
@@ -112,6 +218,7 @@ class ConvolutionLayer:
         if len(prev_layer_.feeding_shape) != 3:
             raise ValueError("Invalid input shape for Convolution Layer")
         self.feeding_shape = (self.filter_num, (input_height_padded - self.filter_size[0] + 1) // self.stride[0], (input_width_padded - self.filter_size[1] + 1) // self.stride[1])
+
 class DetectorLayer:
     def feedForward(self, input_):
         channel, height, width = input_.shape
@@ -134,6 +241,7 @@ class DetectorLayer:
         return DetectorLayer.sigmoid(x) * (1 - DetectorLayer.sigmoid(x))
     def compile(self, prev_layer_):
         self.feeding_shape = prev_layer_.feeding_shape
+
 class PoolingLayer:
     kernel_size = [-1,-1]
     stride = 0 
@@ -188,7 +296,6 @@ class FlattenLayer:
         for x in prev_layer_.feeding_shape:
             total *= x
         self.feeding_shape = (total,)
-
 
 class DenseLayer:
     def __init__(self, units_, activation_):
