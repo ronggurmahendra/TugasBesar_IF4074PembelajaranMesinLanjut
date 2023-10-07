@@ -1,6 +1,8 @@
 import numpy as np
 import math
 from utils import *
+import json
+
 verbose = True
 
 # bias convolution - OKAY
@@ -29,10 +31,8 @@ class CNN:
         # add a dimension to a single channel input
         if self.is_compiled == False:
             raise ValueError("Model is not compiled yet")
-        
         if len(input_.shape) == 2:
             input_ = np.expand_dims(input_, axis=0)
-
         output = []  
         for layer in self.layers:
             output = layer.feedForward(input_)
@@ -82,18 +82,116 @@ class CNN:
                 # print(dE_dW.T)
 
             
+    def load_model(self, filename):
+        
+        loaded_layers = []
 
+        with open(filename, "r") as json_file:
+            serialized_layers = json.load(json_file)
+        
+        for layer_data in serialized_layers:
+            if layer_data["type"] == "ConvolutionLayer":
+               
+                filter_num_ = layer_data["params"]["filter_num"]
+                filter_size_ = layer_data["params"]["filter_size"]
+                filter_ = layer_data["params"]["filter"]
+                bias_ = layer_data["params"]["bias"]
+                padding_ = layer_data["params"]["padding"]
+                stride_ = layer_data["params"]["stride"]
+                input_shape_ = layer_data["params"]["input_shape"]
+
+                layer = ConvolutionLayer(filter_num_, filter_size_, padding_, stride_, input_shape_)
+                layer.filter = filter_
+                layer.filter = bias_
+            elif layer_data["type"] == "DetectorLayer":
+                layer = DetectorLayer()
+            elif layer_data["type"] == "PoolingLayer":
+                kernel_size_ = layer_data["params"]["kernel_size"]
+                stride_ = layer_data["params"]["stride"]
+                mode_ = layer_data["params"]["mode"]
                 
+                layer = PoolingLayer(kernel_size_, mode_, stride_ = stride_)
+            elif layer_data["type"] == "FlattenLayer":
+                layer = FlattenLayer()
+            elif layer_data["type"] == "DenseLayer":
 
-        # return output
+                units_ = layer_data["params"]["units"]
+                weights_ = layer_data["params"]["weights"]
+                bias_ = layer_data["params"]["bias"]
+                activation_ = layer_data["params"]["activation"]
+                output_ = layer_data["params"]["output"]
+                input_  = layer_data["params"]["input"]
 
-    def load_model(self):
-        ## TODO :  load model nya masukin ke layers
-        return 0
+                layer = DenseLayer(units_, activation_)
+                layer.bias = bias_
+                layer.weights = layer.weights_
+                layer.output = output_
+                layer.input = input_
+            else:
+                print("Layer not detected, something went wrong")
+            loaded_layers.append(layer)
+        self.layers = loaded_layers
 
-    def save_model(self):
-        ## TODO : save layers nya ke file
-        return 0
+        return 1
+
+    def save_model(self, filename):
+        serialized_layers = []
+        for layer in self.layers:
+            if isinstance(layer, ConvolutionLayer):
+                layer_data = {
+                    "type" : "ConvolutionLayer",
+                    "params" : {
+                        "filter_num": layer.filter_num,
+                        "filter_size": layer.filter_size,
+                        "filter": layer.filter.tolist(),
+                        "bias": layer.bias,
+                        "padding": layer.padding,
+                        "stride": layer.stride,
+                        "input_shape": layer.input_shape,
+                    }
+                }
+            elif isinstance(layer,DetectorLayer):
+                layer_data = {
+                    "type" : "DetectorLayer",
+                    "params" : {
+
+                    }
+                }
+            elif isinstance(layer,PoolingLayer):
+                layer_data = {
+                    "type" : "PoolingLayer",
+                    "params" : {
+                        "kernel_size" : layer.kernel_size,
+                        "stride" : layer.stride,
+                        "mode" : layer.mode,
+                    }
+                }
+            elif isinstance(layer,FlattenLayer):
+                layer_data = {
+                    "type" : "FlattenLayer",
+                    "params" : {}
+                }
+            elif isinstance(layer,DenseLayer):
+                layer_data = {
+                    "type" : "DenseLayer",
+                    "params" : {
+                        "units" : layer.units ,
+                        "weights" : layer.weights ,
+                        "bias" : layer.bias ,
+                        "activation" : layer.activation,
+                        "output" : layer.output,
+                        "input" : layer.input,
+                    }
+                }
+            else:
+                print("Layer not detected, something went wrong")
+                return
+            serialized_layers.append(layer_data)
+
+        with open(filename, "w") as json_file:
+            json.dump(serialized_layers, json_file)
+
+        return 1
 
     def compile(self):
         for i, layer in enumerate(self.layers):
@@ -110,6 +208,7 @@ class ConvolutionLayer:
     filter_num = -1
     filter_size = [-1,-1]
     filter = [[]]
+    bias = 1
     padding = -1
     stride = -1
     input_shape = [-1,-1,-1]
@@ -223,7 +322,7 @@ class DetectorLayer:
         return output
     
     def reLu(x):
-        return max(0,x)
+        return np.maximum(0,x)
     def sigmoid(x):
         return 1 / (1 + np.exp(-x))
     def softmax(x):
@@ -236,21 +335,17 @@ class DetectorLayer:
     def backprop(self):
         self.dWn = self.next_layer.dWn
         return self.dWn
-    def softmax(x):
-        maxEl = max(x)
-        sum_value = 0
-        for value in x:
-            sum_value += np.exp(value - maxEl)
-        arr_result = []
+    def derived_softmax(x, target):
+        return x if 1 != target else -(1-x)
+    def reLu_derivative(x):
+        x[x<=0] = 0
+        x[x>0] = 1
+        return x
+    def sigmoid_derivative(x):
+        return DetectorLayer.sigmoid(x) * (1 - DetectorLayer.sigmoid(x))
+    def compile(self, prev_layer_):
+        self.feeding_shape = prev_layer_.feeding_shape
 
-        for value in x:
-            arr_result.append(np.exp(value - maxEl)/sum_value)
-            if math.isnan(arr_result[-1]):
-                print("Is nan", x)
-        return arr_result
-def derived_softmax(x, target):
-    return x if 1 != target else -(1-x)
-    
 class PoolingLayer:
     kernel_size = [-1,-1]
     stride = 0 
@@ -358,7 +453,6 @@ class FlattenLayer:
         self.weights = self.next_layer.weights
         self.dWn = self.next_layer.dWn
         return self.next_layer.dWn
-
 
 class DenseLayer:
     output = None
