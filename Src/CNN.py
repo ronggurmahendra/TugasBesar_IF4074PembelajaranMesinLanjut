@@ -130,6 +130,8 @@ class DetectorLayer:
         x[x<=0] = 0
         x[x>0] = 1
         return x
+    def sigmoid_derivative(x):
+        return DetectorLayer.sigmoid(x) * (1 - DetectorLayer.sigmoid(x))
     def compile(self, prev_layer_):
         self.feeding_shape = prev_layer_.feeding_shape
 class PoolingLayer:
@@ -210,7 +212,7 @@ class DenseLayer:
     # backprop is performed in each batch
     def backprop(self, dE_dO, learning_rate):
         dE_dO = np.array(dE_dO)
-        dO_dN = DetectorLayer.reLu_derivative(self.output)
+        dO_dN = DetectorLayer.reLu_derivative(self.output) if self.activation == "relu" else DetectorLayer.sigmoid_derivative(self.output)
         dN_dW = self.input
         dE_dN = (dE_dO * dO_dN)
         dE_dW = np.zeros(self.weights.shape)
