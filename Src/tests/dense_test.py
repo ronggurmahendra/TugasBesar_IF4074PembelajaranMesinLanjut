@@ -15,7 +15,6 @@ def test_standard3x3x1x2():
     model.add(DenseLayer(4, "relu"))
     model.compile()
     output = model.predict(standard3x3x1x2)
-    print(output)
     assert output.shape == (2,4)
 
 def test_backprop_standard3x3x1x2():

@@ -214,7 +214,6 @@ class DenseLayer:
         dN_dW = self.input
         dE_dN = (dE_dO * dO_dN)
         dE_dW = np.zeros(self.weights.shape)
-        print(dE_dN.shape, dN_dW.shape, dE_dW.shape)
         for i in range(len(dN_dW)):
             dE_dW += (np.outer(dN_dW[i], dE_dN[i]) / len(dE_dN))
         self.weights -= learning_rate * dE_dW
