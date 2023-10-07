@@ -33,11 +33,17 @@ class CNN:
             raise ValueError("Model is not compiled yet")
         if len(input_.shape) == 2:
             input_ = np.expand_dims(input_, axis=0)
-        output = []  
-        for layer in self.layers:
-            output = layer.feedForward(input_)
-            input_ = output
-        return output
+        if len(input_.shape) == 3:
+            input_ = np.expand_dims(input_, axis=0)
+        predictions = []
+        for d in input_:
+            for layer in self.layers:
+                output = layer.feedForward(d)
+                d = output
+            if output.shape[0] == 1:
+                output = np.squeeze(output)
+            predictions.append(output)
+        return np.array(predictions)
     
     def fit(self, input_, Y, epochs, loss="log_loss", learning_rate=0.01, batch_size=1):
         if self.is_compiled == False:

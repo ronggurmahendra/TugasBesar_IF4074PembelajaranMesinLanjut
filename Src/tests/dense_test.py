@@ -57,7 +57,7 @@ def test_standard3x3x2_with_pooling():
     model.compile()
     output = model.predict(matrix)
     model.fit(matrix, Y=[1], epochs=2)
-    assert output.shape == (4,)
+    assert output.shape == (1,4)
 
 def test_standard3x3x2_with_pooling_mse():
     model = CNN(input_shape_=matrix.shape)
