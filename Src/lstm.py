@@ -36,14 +36,13 @@ class LSTMLayer():
     # initialize the hidden state and cell state
     h = np.zeros(self.input_shape)
     c = np.zeros(self.input_shape)
-    
+    output = np.zeros(self.timestep)
     # for each time step
     for t in range(self.timestep):
-      output = self.output_gate(x, h)
       c = self.cell_state(x, h, c)
-      h = self.hidden_state(x, output, c)
-
-    
+      h = self.hidden_state(x, self.output_gate(x, h), c)
+      output[t] = h
+    return output
 
   def candidate_gate(self, x: np.ndarray, h_prev: np.ndarray) -> np.ndarray:
     return tanh(np.dot(self.weights["candidate"]["U"], x) + np.dot(self.weights["candidate"]["W"], h_prev) + self.biases["candidate"]["b"])
