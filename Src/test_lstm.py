@@ -2,12 +2,12 @@ import numpy as np
 
 from lstm import LSTMLayer 
 
-input_dummy = [
+input_dummy = np.array([
     [1,2,3,4,5],
     [1,2,3,4,5],
     [1,2,3,4,5],
     [1,2,3,4,5]
-]
+])
 
 model = LSTMLayer(10, [4,5])
 
