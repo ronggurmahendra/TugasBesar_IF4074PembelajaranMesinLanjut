@@ -28,10 +28,10 @@ input_dummy = np.array([
     [1,2,3,4,5]
 ])
 
-model = LSTMLayer(10, [len(x),seq_length])
+model = LSTMLayer(10, [seq_length,1])
 
 model.compile(prev_layer=None, next_layer=None)
-model.feedForward(x)
+# model.feedForward(x)
 
-# for i in x:
-    # model.feedForward(i)
+for i in x:
+    model.feedForward(i)

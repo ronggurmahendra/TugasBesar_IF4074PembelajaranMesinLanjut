@@ -69,14 +69,15 @@ class LSTMLayer():
     h = np.zeros(self.n_cell)
     
     for t in range(self.n_timestamp):
-      print("--------------", t, "--------------")
+      print("---------------------------- cell : ", t, "----------------------------")
       print("x[t]: ",x[t])
       print("c : ", c)
       print("h : ", h)
-
+      # print("output : ", output)
 
       c = self.cell_state(x[t], h, c)
-      # output = self.output_gate(x[t], h)
+      output = self.output_gate(x[t], h)
+      print("output : ", output)
       h = self.hidden_state(x[t], self.output_gate(x[t], h), c)
     return h
 
@@ -91,18 +92,18 @@ class LSTMLayer():
     return tanh(np.dot(self.weights["candidate"]["U"].T, x) + np.dot(self.weights["candidate"]["W"].T, h_prev) + self.weights["candidate"]["b"])
 
   def forget_gate(self, x: np.ndarray, h_prev: np.ndarray) -> np.ndarray:
-    print(np.dot(self.weights["forget"]["U"].T, x))
-    print('self.weights["forget"]["W"] : ', self.weights["forget"]["W"])
-    print('self.weights["forget"]["U"] : ', self.weights["forget"]["U"])
-    print("x", x)
-    print("h_prev", h_prev)
-    temp1 =  np.dot(self.weights["forget"]["U"].T, x)
-    temp2 = np.dot(self.weights["forget"]["W"].T, h_prev)
+    # print(np.dot(self.weights["forget"]["U"].T, x))
+    # print('self.weights["forget"]["W"] : ', self.weights["forget"]["W"])
+    # print('self.weights["forget"]["U"] : ', self.weights["forget"]["U"])
+    # print("x", x)
+    # print("h_prev", h_prev)
+    # temp1 =  np.dot(self.weights["forget"]["U"].T, x)
+    # temp2 = np.dot(self.weights["forget"]["W"].T, h_prev)
     # print(temp1.shape)
     # print(temp2.shape)
     # print(self.weights["forget"]["b"].shape)
-    return sigmoid(temp1 +  
-                   temp2 + self.weights["forget"]["b"])
+    return sigmoid(np.dot(self.weights["forget"]["U"].T, x) +  
+                   np.dot(self.weights["forget"]["W"].T, h_prev) + self.weights["forget"]["b"])
 
   def input_gate(self, x: np.ndarray, h_prev: np.ndarray) -> np.ndarray:
     return sigmoid(np.dot(self.weights["input"]["U"].T, x) + np.dot(self.weights["input"]["W"].T, h_prev) + self.weights["input"]["b"])
