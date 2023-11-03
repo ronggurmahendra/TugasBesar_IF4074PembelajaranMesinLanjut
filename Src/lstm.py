@@ -1,30 +1,33 @@
 import numpy as np
 from activation import sigmoid, tanh
-class LSTMLayer():
 
-  
-  timestep = 0
+
+class LSTMLayer():  
+  n_cell = 0 
   next_layer = None
   weights = None
   biases = None
-  input_shape = None
+  input_shape = None # [timestamp, inputshape(1) ]
 
-  def __init__(self, timestep ,input_shape = None) -> None:
+  def __init__(self, n_cell ,input_shape = None) -> None:
     if input_shape is not None:
       self.input_shape = input_shape
-    self.timestep = timestep
+    self.n_cell = n_cell
 
   def compile(self, prev_layer, next_layer=None):
     self.prev_layer = prev_layer
     if self.prev_layer is not None:
       self.input_shape = self.prev_layer.feeding_shape
-    self.weights["forget"]["U"] = np.ones(self.input_shape)
-    self.weights["forget"]["W"] = np.ones(self.input_shape)
-    self.weights["input"]["U"] = np.ones(self.input_shape)
-    self.weights["input"]["W"] = np.ones(self.input_shape)
-    self.weights["output"]["U"] = np.ones(self.input_shape)
-    self.weights["output"]["W"] = np.ones(self.input_shape)
-    self.weights["candidate"]["U"] = np.ones(self.input_shape)
+    self.weights["forget"]["U"] = np.ones(n_cell, self.input_shape)
+    self.weights["forget"]["W"] = np.ones(n_cell, self.input_shape)
+
+    self.weights["input"]["U"] = np.ones(n_cell, self.input_shape)
+    self.weights["input"]["W"] = np.ones(n_cell, self.input_shape)
+    
+    self.weights["output"]["U"] = np.ones(n_cell, self.input_shape)
+    self.weights["output"]["W"] = np.ones(n_cell,  self.input_shape)
+    
+    self.weights["candidate"]["U"] = np.ones(n_cell, self.input_shape)
     self.weights["candidate"]["W"] = np.ones(self.input_shape)
 
     self.biases["forget"]["b"] = np.zeros(self.input_shape)
@@ -36,9 +39,9 @@ class LSTMLayer():
     # initialize the hidden state and cell state
     h = np.zeros(self.input_shape)
     c = np.zeros(self.input_shape)
-    output = np.zeros(self.timestep)
+    output = np.zeros(self.n_cell)
     # for each time step
-    for t in range(self.timestep):
+    for t in range(self.n_cell):
       c = self.cell_state(x, h, c)
       h = self.hidden_state(x, self.output_gate(x, h), c)
       output[t] = h

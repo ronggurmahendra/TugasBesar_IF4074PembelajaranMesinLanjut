@@ -3,8 +3,6 @@ import math
 from utils import *
 import json
 
-verbose = True
-
 # bias convolution - OKAY
 # update dense bias
 # update convolution bias
@@ -67,7 +65,6 @@ class CNN:
                     output = layer.feedForward(d)
                     int_dict[j] = output
                     d = output
-                print("Output: ", output)
                 for j in range(len(self.layers)-1, -1, -1):
                     layer = self.layers[j]
                     if (j == len(self.layers)-1):
@@ -76,7 +73,6 @@ class CNN:
                             layer.dOutput = np.array([p if i != output_class else p - 1 for i, p in enumerate(layer.output)])
                         elif loss == "mse":
                             layer.dOutput = np.array([p - Y[i] for p in layer.output]) * DetectorLayer.sigmoid_derivative(layer.output)
-                        print("dOutput: ", layer.dOutput)
                         dE_dW = np.array(multiply_arrays(layer.dOutput, layer.prev_layer.output))
                         # update weight
                         layer.weights -= dE_dW.T * learning_rate
@@ -88,13 +84,12 @@ class CNN:
             print("\n")
             print("Epoch ", e + 1)
             accuracy = 0
-            print("Weights: ", self.layers[3].weights)
             if loss == "log_loss":
                 for i, o in enumerate(output):
                     if np.argmax(o) == Y[i]:
                         accuracy += 1
                 accuracy /= len(output)
-                print("Accuracy: ", )
+                print("Accuracy: ", accuracy)
             elif loss == "mse":
                 for i, o in enumerate(output):
                     if o > 0.5:
@@ -334,7 +329,10 @@ class DetectorLayer:
     def reLu(x):
         return np.maximum(0,x)
     def sigmoid(x):
-        return 1 / (1 + np.exp(-x))
+        if x < 0:
+            return np.exp(x) / (1 + np.exp(x))
+        else:
+            return 1/(1+np.exp(-x))
     def softmax(x):
         exp_x = np.exp(x - np.max(x))  # Subtracting max(x) for numerical stability
         return exp_x / exp_x.sum(axis=0, keepdims=True)
