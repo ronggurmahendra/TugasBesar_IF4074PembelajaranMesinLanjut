@@ -25,23 +25,23 @@ class LSTMLayer():
     print("(self.n_cell, self.input_shape[1])", (self.n_cell, self.input_shape[1]))
     self.weights = {
       "forget": { 
-        "U": np.ones((self.n_feature, self.n_cell)),
-        "W": np.ones((self.n_cell, self.n_cell)),
+        "U": np.random.rand(self.n_feature, self.n_cell),
+        "W": np.random.rand(self.n_cell, self.n_cell),
         "b": np.zeros(self.n_cell)
       },
       "input": {
-        "U": np.ones((self.n_feature, self.n_cell)),
-        "W": np.ones((self.n_cell, self.n_cell)),
+        "U": np.random.rand(self.n_feature, self.n_cell),
+        "W": np.random.rand(self.n_cell, self.n_cell),
         "b": np.zeros(self.n_cell)
       },
       "output": {
-        "U": np.ones((self.n_feature, self.n_cell)),
-        "W": np.ones((self.n_cell, self.n_cell)),
+        "U": np.random.rand(self.n_feature, self.n_cell),
+        "W": np.random.rand(self.n_cell, self.n_cell),
         "b": np.zeros(self.n_cell)
       },
       "candidate": {
-        "U": np.ones((self.n_feature, self.n_cell)),
-        "W": np.ones((self.n_cell, self.n_cell)),
+        "U":np.random.rand(self.n_feature, self.n_cell),
+        "W": np.random.rand(self.n_cell, self.n_cell),
         "b": np.zeros(self.n_cell)
       },
     }
