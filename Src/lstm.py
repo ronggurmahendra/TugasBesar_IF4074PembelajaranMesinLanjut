@@ -137,6 +137,8 @@ class LSTMLayer():
     obj["params"]["b_c"] = self.weights["candidate"]["b"].tolist()
     obj["params"]["b_o"] = self.weights["output"]["b"].tolist()
 
+    obj["params"]["n_cell"] = self.n_cell
+    obj["params"]["input_shape"] = self.input_shape
     return obj
 
   def load(self, obj):
@@ -154,3 +156,6 @@ class LSTMLayer():
     self.weights["forget"]["b"] = np.array(obj["params"]["b_f"])
     self.weights["candidate"]["b"] = np.array(obj["params"]["b_c"])
     self.weights["output"]["b"] = np.array(obj["params"]["b_o"])
+
+    self.n_cell = obj["params"]["n_cell"]
+    self.input_shape = obj["params"]["input_shape"]
