@@ -1,5 +1,5 @@
 import numpy as np
-
+import json
 from lstm import LSTMLayer 
 import numpy as np
 def create_sequences(data, seq_length):
@@ -31,8 +31,3 @@ input_dummy = np.array([
 model = LSTMLayer(10, [seq_length,1])
 
 model.compile(prev_layer=None, next_layer=None)
-# model.feedForward(x)
-
-for i in x:
-    print(i)
-    model.feedForward(i)

@@ -116,3 +116,41 @@ class LSTMLayer():
   
   def hidden_state(self, x: np.ndarray, o: np.ndarray, c: np.ndarray) -> np.ndarray:
     return o * tanh(c)
+  
+  def save(self):
+    obj = {}
+    obj["type"] = "lstm"
+    obj["params"] = {}
+
+    obj["params"]["W_i"] = self.weights["input"]["W"].tolist()
+    obj["params"]["W_f"] = self.weights["forget"]["W"].tolist()
+    obj["params"]["W_c"] = self.weights["candidate"]["W"].tolist()
+    obj["params"]["W_o"] = self.weights["output"]["W"].tolist()
+
+    obj["params"]["U_i"] = self.weights["input"]["U"].tolist()
+    obj["params"]["U_f"] = self.weights["forget"]["U"].tolist()
+    obj["params"]["U_c"] = self.weights["candidate"]["U"].tolist()
+    obj["params"]["U_o"] = self.weights["output"]["U"].tolist()
+
+    obj["params"]["b_i"] = self.weights["input"]["b"].tolist()
+    obj["params"]["b_f"] = self.weights["forget"]["b"].tolist()
+    obj["params"]["b_c"] = self.weights["candidate"]["b"].tolist()
+    obj["params"]["b_o"] = self.weights["output"]["b"].tolist()
+
+    return obj
+
+  def load(self, obj):
+    self.weights["input"]["W"] = np.array(obj["params"]["W_i"])
+    self.weights["forget"]["W"] = np.array(obj["params"]["W_f"])
+    self.weights["candidate"]["W"] = np.array(obj["params"]["W_c"])
+    self.weights["output"]["W"] = np.array(obj["params"]["W_o"])
+
+    self.weights["input"]["U"] = np.array(obj["params"]["U_i"])
+    self.weights["forget"]["U"] = np.array(obj["params"]["U_f"])
+    self.weights["candidate"]["U"] = np.array(obj["params"]["U_c"])
+    self.weights["output"]["U"] = np.array(obj["params"]["U_o"])
+
+    self.weights["input"]["b"] = np.array(obj["params"]["b_i"])
+    self.weights["forget"]["b"] = np.array(obj["params"]["b_f"])
+    self.weights["candidate"]["b"] = np.array(obj["params"]["b_c"])
+    self.weights["output"]["b"] = np.array(obj["params"]["b_o"])
