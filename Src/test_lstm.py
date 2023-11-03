@@ -34,4 +34,5 @@ model.compile(prev_layer=None, next_layer=None)
 # model.feedForward(x)
 
 for i in x:
+    print(i)
     model.feedForward(i)
