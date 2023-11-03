@@ -13,3 +13,8 @@ def create_sequences(data, seq_length):
     return np.array(sequences), np.array(targets)
 
 
+import LSTMLayer from lstm
+
+model = LSTMLayer(10, [4,5])
+
+model.compile()

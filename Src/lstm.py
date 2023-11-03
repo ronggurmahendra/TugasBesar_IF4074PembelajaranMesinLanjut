@@ -18,22 +18,22 @@ class LSTMLayer():
     self.prev_layer = prev_layer
     if self.prev_layer is not None:
       self.input_shape = self.prev_layer.feeding_shape
-    self.weights["forget"]["U"] = np.ones(n_cell, self.input_shape)
-    self.weights["forget"]["W"] = np.ones(n_cell, self.input_shape)
+    self.weights["forget"]["U"] = np.ones(self.n_cell, self.input_shape[1])
+    self.weights["forget"]["W"] = np.ones(self.n_cell, self.input_shape[1])
 
-    self.weights["input"]["U"] = np.ones(n_cell, self.input_shape)
-    self.weights["input"]["W"] = np.ones(n_cell, self.input_shape)
+    self.weights["input"]["U"] = np.ones(self.n_cell, self.input_shape[1])
+    self.weights["input"]["W"] = np.ones(self.n_cell, self.input_shape[1])
     
-    self.weights["output"]["U"] = np.ones(n_cell, self.input_shape)
-    self.weights["output"]["W"] = np.ones(n_cell,  self.input_shape)
+    self.weights["output"]["U"] = np.ones(self.n_cell, self.input_shape[1])
+    self.weights["output"]["W"] = np.ones(self.n_cell,  self.input_shape[1])
     
-    self.weights["candidate"]["U"] = np.ones(n_cell, self.input_shape)
-    self.weights["candidate"]["W"] = np.ones(self.input_shape)
+    self.weights["candidate"]["U"] = np.ones(self.n_cell, self.input_shape[1])
+    self.weights["candidate"]["W"] = np.ones(self.n_cell, self.input_shape[1])
 
-    self.biases["forget"]["b"] = np.zeros(self.input_shape)
-    self.biases["input"]["b"] = np.zeros(self.input_shape)
-    self.biases["output"]["b"] = np.zeros(self.input_shape)
-    self.biases["candidate"]["b"] = np.zeros(self.input_shape)
+    self.biases["forget"]["b"] = np.zeros(self.n_cell)
+    self.biases["input"]["b"] = np.zeros(self.n_cell)
+    self.biases["output"]["b"] = np.zeros(self.n_cell)
+    self.biases["candidate"]["b"] = np.zeros(self.n_cell)
 
   def feedForward(self, x: np.ndarray) -> np.ndarray:
     # initialize the hidden state and cell state
