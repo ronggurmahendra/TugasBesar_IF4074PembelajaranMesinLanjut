@@ -67,13 +67,16 @@ class LSTMLayer():
     
     c = np.zeros(self.n_cell)
     h = np.zeros(self.n_cell)
+    
     for t in range(self.n_timestamp):
       print("--------------", t, "--------------")
       print("x[t]: ",x[t])
       print("c : ", c)
       print("h : ", h)
 
+
       c = self.cell_state(x[t], h, c)
+      # output = self.output_gate(x[t], h)
       h = self.hidden_state(x[t], self.output_gate(x[t], h), c)
     return h
 
