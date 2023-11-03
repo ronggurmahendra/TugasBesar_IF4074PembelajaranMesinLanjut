@@ -28,7 +28,7 @@ input_dummy = np.array([
     [1,2,3,4,5]
 ])
 
-model = LSTMLayer(10, [1,seq_length])
+model = LSTMLayer(10, [len(x),seq_length])
 
 model.compile(prev_layer=None, next_layer=None)
 
